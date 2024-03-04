@@ -2,22 +2,21 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# Create empty DataFrame to store tasks
-tasks_df = pd.DataFrame(columns=['Task', 'Date', 'Status'])
+# Initialize an empty list to store tasks
+tasks = []
 
 # Function to add a task
 def add_task(task, date):
-    global tasks_df
-    tasks_df = tasks_df.append({'Task': task, 'Date': date, 'Status': 'Pending'}, ignore_index=True)
+    tasks.append({'Task': task, 'Date': date, 'Status': 'Pending'})
 
 # Function to update task status
-def update_status(task, new_status):
-    global tasks_df
-    tasks_df.loc[tasks_df['Task'] == task, 'Status'] = new_status
+def update_status(task_index, new_status):
+    tasks[task_index]['Status'] = new_status
 
 # Function to display tasks
 def display_tasks():
     st.subheader('To-Do List')
+    tasks_df = pd.DataFrame(tasks)
     st.table(tasks_df)
 
 # Main function
