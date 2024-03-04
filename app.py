@@ -1,41 +1,48 @@
 import streamlit as st
+from datetime import datetime, timedelta
 
-# Create a title for the app
-st.title("To-Do List")
+def add_task(tasks, task_name, due_date):
+    tasks.append({"task_name": task_name, "due_date": due_date, "status": "Pending"})
+    st.success("Task added successfully!")
 
-# Create a text input field for the user to enter a task
-task = st.text_input("Enter a task")
+def mark_as_completed(tasks, task_index):
+    tasks[task_index]["status"] = "Completed"
+    st.success("Task marked as completed!")
 
-# Create a button for the user to add the task to the list
-add_task_button = st.button("Add Task")
+def check_missed_tasks(tasks):
+    for task in tasks:
+        due_date = datetime.strptime(task["due_date"], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() > due_date and task["status"] != "Completed":
+            task["status"] = "Missed"
+    return tasks
 
-# Create a list to store the tasks
-tasks = []
+def main():
+    st.title("Task Manager")
 
-# Create a button to insert time and date
-insert_time_date_button = st.button("Insert Time and Date")
+    tasks = st.session_state.get("tasks", [])
 
-# If the user clicks the add task button, add the task to the list
-if add_task_button:
-    tasks.append({"task": task, "status": "Pending"})
+    if not tasks:
+        st.session_state.tasks = []
 
-# If the user clicks the insert time and date button, insert the time and date
-if insert_time_date_button:
-    time = st.time_input("Time:")
-    date = st.date_input("Date:")
-    tasks.append({"task": task, "time": time, "date": date, "status": "Pending"})
+    task_name = st.text_input("Enter task name:")
+    due_date = st.date_input("Due date:")
+    due_time = st.time_input("Due time:")
 
-# Display the list of tasks
-st.write("Tasks:")
-table_columns = ["Date", "Time", "Task", "Status"]
-task_rows = []
-for task in tasks:
-    task_row = [
-        task.get("date", ""),
-        task.get("time", ""),
-        task.get("task", ""),
-        task.get("status", ""),
-    ]
-    task_rows.append(task_row)
+    if st.button("Add Task"):
+        due_date_time = datetime.combine(due_date, due_time)
+        add_task(tasks, task_name, due_date_time.strftime("%Y-%m-%d %H:%M:%S"))
 
-st.table(task_rows, columns=table_columns)
+    tasks = check_missed_tasks(tasks)
+
+    if tasks:
+        st.header("Tasks")
+        for i, task in enumerate(tasks):
+            st.write(f"**Task {i+1}:** {task['task_name']} - **Due Date:** {task['due_date']} - **Status:** {task['status']}")
+            if task["status"] != "Completed":
+                if st.button(f"Mark Task {i+1} as Completed"):
+                    mark_as_completed(tasks, i)
+    else:
+        st.write("No tasks yet.")
+
+if __name__ == "__main__":
+    main()
