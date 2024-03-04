@@ -1,42 +1,40 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
-# Function to load existing tasks from file or create a new one if it doesn't exist
-def load_tasks():
-    try:
-        tasks = pd.read_csv("tasks.csv")
-    except FileNotFoundError:
-        tasks = pd.DataFrame(columns=["Task", "Due Date", "Status"])
-    return tasks
+# Create empty DataFrame to store tasks
+tasks_df = pd.DataFrame(columns=['Task', 'Date', 'Status'])
 
-# Function to save tasks to file
-def save_tasks(tasks):
-    tasks.to_csv("tasks.csv", index=False)
+# Function to add a task
+def add_task(task, date):
+    global tasks_df
+    tasks_df = tasks_df.append({'Task': task, 'Date': date, 'Status': 'Pending'}, ignore_index=True)
 
-# Main function to run the app
+# Function to update task status
+def update_status(task, new_status):
+    global tasks_df
+    tasks_df.loc[tasks_df['Task'] == task, 'Status'] = new_status
+
+# Function to display tasks
+def display_tasks():
+    st.subheader('To-Do List')
+    st.table(tasks_df)
+
+# Main function
 def main():
-    st.title("To-Do List App")
+    st.title('To-Do List APK')
 
-    tasks = load_tasks()
+    # Input fields for task and date
+    task = st.text_input('Task:')
+    date = st.date_input('Due Date:', min_value=datetime.today())
 
-    # Sidebar to add new tasks
-    st.sidebar.header("Add New Task")
-    new_task = st.sidebar.text_input("Task:")
-    due_date = st.sidebar.date_input("Due Date:")
-    if st.sidebar.button("Add Task"):
-        tasks = tasks.append({"Task": new_task, "Due Date": due_date, "Status": "Pending"}, ignore_index=True)
-        save_tasks(tasks)
+    # Button to add task
+    if st.button('Add Task'):
+        add_task(task, date)
 
-    # Show tasks table
-    st.header("Your Tasks")
-    st.dataframe(tasks)
+    # Display tasks
+    display_tasks()
 
-    # Show tasks status
-    st.header("Tasks Status")
-    status_counts = tasks["Status"].value_counts()
-    st.write(f"Completed: {status_counts.get('Completed', 0)}")
-    st.write(f"Missed: {status_counts.get('Missed', 0)}")
-    st.write(f"Pending: {status_counts.get('Pending', 0)}")
-
-if __name__ == "__main__":
+# Run the main function
+if __name__ == '__main__':
     main()
