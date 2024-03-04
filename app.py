@@ -1,48 +1,43 @@
+
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime
 
-def add_task(tasks, task_name, due_date):
-    tasks.append({"task_name": task_name, "due_date": due_date, "status": "Pending"})
-    st.success("Task added successfully!")
+# Function to classify the task based on time
+def classify_task(task_time):
+    now = datetime.now()
+    if now > task_time:
+        return "Missed"
+    elif now == task_time:
+        return "Due"
+    else:
+        return "Pending"
 
-def mark_as_completed(tasks, task_index):
-    tasks[task_index]["status"] = "Completed"
-    st.success("Task marked as completed!")
+# Function to display tasks
+def display_tasks(tasks):
+    st.write("### Tasks")
+    if not tasks:
+        st.write("No tasks added yet.")
+    else:
+        for task in tasks:
+            status = classify_task(task['time'])
+            st.write(f"- **{task['name']}**: {status}")
 
-def check_missed_tasks(tasks):
-    for task in tasks:
-        due_date = datetime.strptime(task["due_date"], "%Y-%m-%d %H:%M:%S")
-        if datetime.now() > due_date and task["status"] != "Completed":
-            task["status"] = "Missed"
-    return tasks
+# Function to add a new task
+def add_task(tasks, name, time):
+    tasks.append({'name': name, 'time': time})
 
 def main():
     st.title("Task Manager")
 
-    tasks = st.session_state.get("tasks", [])
+    tasks = []
 
-    if not tasks:
-        st.session_state.tasks = []
-
-    task_name = st.text_input("Enter task name:")
-    due_date = st.date_input("Due date:")
-    due_time = st.time_input("Due time:")
+    task_name = st.text_input("Task Name")
+    task_time = st.date_input("Task Date")  # Can be modified to include time as well
 
     if st.button("Add Task"):
-        due_date_time = datetime.combine(due_date, due_time)
-        add_task(tasks, task_name, due_date_time.strftime("%Y-%m-%d %H:%M:%S"))
+        add_task(tasks, task_name, task_time)
 
-    tasks = check_missed_tasks(tasks)
-
-    if tasks:
-        st.header("Tasks")
-        for i, task in enumerate(tasks):
-            st.write(f"**Task {i+1}:** {task['task_name']} - **Due Date:** {task['due_date']} - **Status:** {task['status']}")
-            if task["status"] != "Completed":
-                if st.button(f"Mark Task {i+1} as Completed"):
-                    mark_as_completed(tasks, i)
-    else:
-        st.write("No tasks yet.")
+    display_tasks(tasks)
 
 if __name__ == "__main__":
     main()
